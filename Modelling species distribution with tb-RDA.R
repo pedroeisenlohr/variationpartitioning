@@ -127,7 +127,7 @@ anova
 spp.h.det <- resid(lm(as.matrix(spp.h) ~ ., data=ll))
 write.table(spp.h.det,"Detrended_Data.csv")
 
-## If ANOVA is significant, forward selection of coordinates
+## If ANOVA is significant, proceed with forward selection of coordinates
 (spp.XY.R2a <- RsquareAdj(spp.XY.rda)$adj.r.squared)
 (spp.XY.fwd <- forward.sel(spp.h, as.matrix(ll), 
 	adjR2thresh=spp.XY.R2a))
@@ -706,7 +706,7 @@ write.table(sel.vectors,"best.mem.csv")
 # Variance partitioning:
 ### In case of detrended data as response matrix along the analysis above, one should remove 
 ### the 'XY.red' component, and change 'spp.h' by 'spp.h.det' from now on.
-### Additionally, in case of classical PCNM (MEM Type 1) was the best MEM type, please change 
+### Additionally, in case of classical PCNM (MEM Type 1) as the best MEM type, please change 
 ### sel.vectors by PCNM.red from now on.
 ### In case of using detrended response data (spp.h.det instead of spp.h), you should not use
 ### XY.red during the steps below.
