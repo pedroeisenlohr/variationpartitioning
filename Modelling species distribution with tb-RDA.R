@@ -6,9 +6,10 @@
 ### Borcard D., Gillet F. & Legendre P. Numerical Ecology with R, Springer, 2011
 ### Released on: 10 August, 2017
 
-### Please refer to this code as (but within a few months it will be available as a supplementary material of a paper):
+### Please refer to this code as Eisenlohr (2014) with improvements available at http://github.com/pedroeisenlohr/variancepartition.
 ### Eisenlohr, P.V. (2014) Modelling species distribution patterns with environmental and spatial data: a tentative code. 
-### Available at: http://pedroeisenlohr.webnode.com.br/scripts-em-r/
+### doi: 10.1007/s40415-014-0064-3.
+
 
 ### Acknowledgments:
 ### Daniel Borcard
