@@ -6,6 +6,10 @@
 ### Please refer to this code as "Eisenlohr (2014) with improvements available at http://github.com/pedroeisenlohr/variancepartition".
 ### Eisenlohr, P.V. (2014) doi: 10.1007/s40415-014-0064-3.
 
+### Acknowledgments: 
+### Sylvie Clappe
+### João Carlos Pires de Oliveira
+
 
 library(ade4)
 library(adespatial)
