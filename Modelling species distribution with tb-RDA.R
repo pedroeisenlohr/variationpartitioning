@@ -54,8 +54,7 @@ summary(pca.species.p)
 # Alternatively, you may retain axes that capture about 95% of all inertia:
 (explic <- pca.species.p$eig/sum(pca.species.p$eig))
 (cmu <- cumsum(explic))
-(nb <- which(cmu <= 0.95))
-(length.pca3 <- length(nb))
+(length.pca3 <- which.min(cmu <= 0.95))
 pca.species <- dudi.pca(spp.h, scannf = F, nf = length.pca3)
 scores <- pca.species$l1
 head(scores)
