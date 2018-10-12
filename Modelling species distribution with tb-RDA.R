@@ -101,39 +101,54 @@ env.sign <- sort(env.fwd$order)
 ######### SELECTING SPATIAL DATA ############
 #############################################
 
+#############################################
+######### SELECTING SPATIAL DATA ############
+#############################################
+
 ##### OPTIMIZING THE SELECTION OF SMW #####
+### The function listw.candidates is used to build the spatial weighting matrices that
+### we want to test and compare (with the listw.select function). We test a Gabriel's graph, 
+### a minimum spanning tree, and a distance-based connectivity defined by a threshold
+### distance corresponding to the smallest distance keeping all sites connected (i.e., 
+### the defaut value of d2). These connectivity matrices are then either not weighted 
+### (binary weighting), or weighted by the linearly decreasing function:
+
 candidates <- listw.candidates(coord = ll, nb = c("del", "gab", "rel", "mst",
   			"pcnm", "dnear"), weights = c("binary", "flin", "fup", "fdown"))
 names(candidates)                              
 (nbw<-length(candidates)) ### Number of spatial weighting matrices generated
 
-### Optimization of the selection of the SWM among the candidates generated above,
-### using the corrected significance threshold calculated above for the global tests (global):
-(W_sel_all <- listw.select(scores, candidates, MEM.autocor = "all", method = "global",
-                    p.adjust = TRUE, MEM.all = TRUE, nperm = 999))
+
+### Optimization the selection of a subset of SWM among the candidates generated above,
+### using the corrected significance threshold calculated ("forward"):
+(W_sel_fwd <- listw.select(scores, candidates, MEM.autocor = "positive", method = "FWD",
+                    p.adjust = TRUE, MEM.all = TRUE, nperm = 999, nperm.global = 9999, alpha = 0.05))
 ### Some characteristics of the best spatial model:
 # Best SWM:
-(names.sel<-names(W_sel_all$best.id))
+W_sel_fwd$best.id
+(names.sel<-names(W_sel_fwd$best.id))
 # Retained object for further analysis
-W_sel_all$best$MEM.all
-(length(W_sel_all$best$MEM.all))
-MEM.all<-W_sel_all$best$MEM.all
-
-### Forward selection of the best SWM selected above:
-## Run the global RDA analysis
-(spp.spatial.rda <- rda(scores, W_sel_all$best$MEM.select))
-anova(spp.spatial.rda, permutations = how(nperm=999))
-(spp.R2a <- RsquareAdj(spp.spatial.rda)$adj.r.squared)
-(spp.spatial.fwd <- forward.sel(scores, as.matrix(W_sel_all$best$MEM.select), 
-	adjR2thresh=spp.R2a))
-(nb.sig.spatial <- nrow(spp.spatial.fwd)) #Number of signif. MEM
-# Identity of significant MEMs in increasing order
-(spatial.sign <- sort(spp.spatial.fwd[,2]))
-# Write the significant MEMs to a new object
-spatial.red <- W_sel_all$best$MEM.select[,c(spatial.sign)]
-spatial.red <- as.matrix(spatial.red)
+SWM.selected<-W_sel_fwd$best$MEM.select
+class(SWM.selected)
+dim(SWM.selected)
+write.table(SWM.selected,"SWMselected.csv")
+# Write the selected MEMs to a new object
+spatial.red <- as.matrix(SWM.selected)
 class(spatial.red)
 
+# Creating an object with the name of the selected SWM:
+x<-data.frame(names(candidates),W_sel_fwd$candidates$R2Adj.select)
+names(x)<- c('MEMS', "select")
+(ms<- which.max(x$select))
+candidates1=array(candidates)
+(candidates.sel<-candidates1[[ms]])
+
+######################################################
+
+### Obtaining all spatial eigenvectors from the SWM selected above:
+mem.all<-mem(candidates.sel, MEM.autocor = "all")
+mem.all
+class(mem.all)
 
 
 #############################################
@@ -144,7 +159,7 @@ scores.dudi <- dudi.pca(spp.h, scannf = F, nf=length.pca3)
 vprda <- varipart(scores.dudi, env.red, spatial.red, nrepet=999)#classic variation partitioning
 vprda
 
-vprdaMSR <- msr(vprda, MEM.all, nrepet = 999)#new variation partitioning 
+vprdaMSR <- msr(vprda, mem.all, nrepet = 999)#new variation partitioning 
 vprdaMSR
 
 res <- rbind(vprda$R2.adj, vprdaMSR$R2.adj.msr)
@@ -154,7 +169,7 @@ res
 
 ###########################################################################
 ### Testing the environmental significance, after considering #############  
-#################### the effect of selected MEMs ##########################
+### the effect of selected MEMs ###########################################
 ###########################################################################
 env.rda<-rda(scores,env.red,spatial.red)
 summary(env.rda) ### Please observe the explanation of each axis.
@@ -164,9 +179,10 @@ test.env<-anova(env.rda, permutations = how(nperm=999))
 test.env
 #plot(env.rda)
 
+
 ###########################################################################
 ### Testing the spatial significance, after considering ###################  
-############### the effect of selected env ################################
+### the effect of selected env ############################################
 ###########################################################################
 spatial.rda<-rda(scores,spatial.red,env.red)
 summary(spatial.rda) ### Please observe the explanation of each axis.
