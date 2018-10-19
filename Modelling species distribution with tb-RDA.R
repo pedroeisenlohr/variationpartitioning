@@ -1,14 +1,6 @@
 ### SELECION OF ENVIRONMENTAL AND SPATIAL DATA, AND VARIATION PARTITIONING ###
-#By: Pedro V. Eisenlohr - UNEMAT, Alta Floresta (pedro.eisenlohr@unemat.br)
+#By: Pedro V. Eisenlohr - UNEMAT, Alta Floresta
 #Based on Bauman et al. (2018), Clappe et al. (2018), Blanchet et al. (2008) and others
-### Released on: October 04, 2018
-
-### Please refer to this code as "Eisenlohr (2014) with improvements available at http://github.com/pedroeisenlohr/variancepartition".
-### Eisenlohr, P.V. (2014) doi: 10.1007/s40415-014-0064-3.
-
-### Acknowledgments: 
-### Sylvie Clappe
-### João Carlos Pires de Oliveira
 
 
 library(ade4)
@@ -16,19 +8,23 @@ library(adespatial)
 library(spdep)
 library(vegan)
 library(packfor)
+library(usdm)
+
 
 ##Species matrix
 species<-read.table(file.choose(),row.names=1,header=T,sep=",") ###community data
 View(species)
-unicates<-apply(spp,2,sum) 
-spp.u<-spp[,which(unicates>1)] ###removing unicates
+dim(species)
+unicates<-apply(species,2,sum) 
+spp.u<-species[,which(unicates>1)] ###removing unicates
 dim(spp.u)
 spp.h <- decostand(spp.u, method = "hell")
+View(spp.h)
 
 ##Environmental matrix
 environment <- read.table(file.choose(),row.names=1,header=T,sep=",")
 View(environment)
-#environment<-decostand(environment,"standardize")
+environment<-decostand(environment,"standardize") #caso queira padronizar a escala das variáveis ambientais
 View(environment)
 
 ##Spatial matrix
@@ -51,7 +47,7 @@ summary(pca.species.p)
 #head(scores)
 #dim(scores)
 
-# Alternatively, you may retain axes that capture about 95% of all inertia:
+# Alternatively, you may retain axes that capture 95% of all inertia:
 (explic <- pca.species.p$eig/sum(pca.species.p$eig))
 (cmu <- cumsum(explic))
 (length.pca3 <- which.min(cmu <= 0.95))
@@ -78,11 +74,11 @@ dim(scores)
 env.rda <- rda(scores, environment)
 vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
 # If VIF > 10, you should remove one or more variables:
-#v1<-vifcor(environment,th=0.8)
-#v1
+v1<-vifcor(environment,th=0.8)
+v1
 # Verify VIF. VIF should be < 10. If necessary, reduce the th.
-#environment<-exclude(environment,v1)
-#names(environment)
+environment<-exclude(environment,v1)
+names(environment)
 
 # Forward selection of the environmental variables
 env.rda<-rda(scores,environment)
@@ -90,16 +86,11 @@ anova(env.rda, permutations = how(nperm=999))
 ### According to Blanchet et al. (2008): "If, and only if, the global 
 ### test is significant, one can proceed with forward selection"
 (env.R2a <- RsquareAdj(env.rda)$adj.r.squared)
-env.fwd <- forward.sel(scores, environment, adjR2thresh=env.R2a)
+env.fwd <- packfor::forward.sel(scores, environment, adjR2thresh=env.R2a)
 env.fwd #List of selected variables
-length(env.fwd) #Number of selected variables
 env.sign <- sort(env.fwd$order)
 (env.red <- environment[,c(env.sign)])
 
-
-#############################################
-######### SELECTING SPATIAL DATA ############
-#############################################
 
 #############################################
 ######### SELECTING SPATIAL DATA ############
@@ -122,7 +113,7 @@ names(candidates)
 ### Optimization the selection of a subset of SWM among the candidates generated above,
 ### using the corrected significance threshold calculated ("forward"):
 (W_sel_fwd <- listw.select(scores, candidates, MEM.autocor = "positive", method = "FWD",
-                    p.adjust = TRUE, MEM.all = TRUE, nperm = 999, nperm.global = 9999, alpha = 0.05))
+                    p.adjust = TRUE, MEM.all = TRUE, nperm = 999))
 ### Some characteristics of the best spatial model:
 # Best SWM:
 W_sel_fwd$best.id
@@ -149,6 +140,7 @@ candidates1=array(candidates)
 mem.all<-mem(candidates.sel, MEM.autocor = "all")
 mem.all
 class(mem.all)
+dim(mem.all)
 
 
 #############################################
@@ -177,7 +169,30 @@ spenvcor(env.rda) # species-environment correlation
 intersetcor(env.rda) #"interset" correlation
 test.env<-anova(env.rda, permutations = how(nperm=999))
 test.env
-#plot(env.rda)
+plot(env.rda)
+
+#Criando objetos para cada variável ambiental selecionada:
+oxy<-data.frame(env.red$oxy)
+slo<-data.frame(env.red$slo)
+flo<-data.frame(env.red$flo)
+pho<-data.frame(env.red$pho)
+
+#Testando a significância de cada variável ambiental selecionada:
+env.rda.oxy <-rda(scores,oxy,cbind(slo,flo,pho,spatial.red))
+summary(env.rda.oxy)
+(anova(env.rda.oxy,permutations = how(nperm=999)))
+
+env.rda.slo <-rda(scores,slo,cbind(oxy,flo,pho,spatial.red))
+summary(env.rda.slo)
+(anova(env.rda.slo,permutations = how(nperm=999)))
+
+env.rda.flo <-rda(scores,flo,cbind(oxy,slo,pho,spatial.red))
+summary(env.rda.flo)
+(anova(env.rda.flo,permutations = how(nperm=999)))
+
+env.rda.pho <-rda(scores,pho,cbind(oxy,flo,slo,spatial.red))
+summary(env.rda.pho)
+(anova(env.rda.pho,permutations = how(nperm=999)))
 
 
 ###########################################################################
@@ -191,3 +206,6 @@ intersetcor(spatial.rda) #"interset" correlation
 test.spatial<-anova(spatial.rda, permutations = how(nperm=999))
 test.spatial
 #plot(spatial.rda)
+
+
+#END
