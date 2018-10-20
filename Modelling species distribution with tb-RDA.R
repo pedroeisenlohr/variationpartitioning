@@ -69,16 +69,55 @@ dim(scores)
 ### and Price 1977, Freedman et al. 1992)".
 ### So, if you have found strong collinearities, I recommend you remove them
 ### before proceeding with the next step. An interesting way to address this
-### issue is applying vifcor (usdm package).
+### issue is applying Hierarchical Clustering of Variables (Chavent et al. 2012).
 # Checking collinearities
 env.rda <- rda(scores, environment)
 vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
-# If VIF > 10, you should remove one or more variables:
-v1<-vifcor(environment,th=0.8)
-v1
-# Verify VIF. VIF should be < 10. If necessary, reduce the th.
-environment<-exclude(environment,v1)
-names(environment)
+# If VIF > 10, consider using Hierarchical Clustering of Variables, as follows:
+
+
+#################################################################
+#################################################################
+#### HIERARCHICAL CLUSTERING OF VARIABLES #######################
+#################################################################
+#tree <- hclustvar(environment)
+#plot(tree)
+#stab <- stability(tree,B=100) #Ajuda a selecionar o número de partições. 
+
+### Abaixo, ajustar o número conforme o total desejado de partições:
+### P.ex., se o número desejado de clusters for 4:
+#P4<-cutreevar(tree,4,matsim=TRUE)
+#cluster <- P4$cluster
+#X <- environment
+#princomp(X[,which(cluster==1)],cor=TRUE)$sdev^2
+#princomp(X[,which(cluster==2)],cor=TRUE)$sdev^2
+#princomp(X[,which(cluster==3)],cor=TRUE)$sdev^2
+#princomp(X[,which(cluster==4)],cor=TRUE)$sdev^2
+#P4$cluster
+#clusterID <- P4$var
+#clusterID
+#write.table(P4$scores,"PCAScores.csv")
+
+#env2 <- read.table("PCAScores.csv",row.names=1,header=T,sep=" ")
+#dim(env2)
+#View(env2)
+#vif(env2)#Cerifique-se de que não haja nenhuma variável com VIF>10.
+#Não houve colinearidade? Então execute o comando abaixo:
+#env3=env2
+#Houve colinearidade? Então execute este comando:
+#(v1<-vifcor(env2,th=0.8)) 
+#Caso permaneça alguma variável com VIF>10, refaça o procedimento acima abaixando o th.
+#env3 <- exclude(env2, v1)
+#names(env3)
+#write.table(env3,"env_sem colinearidades.csv")
+
+#environment = env3
+
+#################################################################
+#################################################################
+#### END OF HIERARCHICAL CLUSTERING OF VARIABLES ################
+#################################################################
+
 
 # Forward selection of the environmental variables
 env.rda<-rda(scores,environment)
