@@ -80,12 +80,13 @@ vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
 #################################################################
 #### HIERARCHICAL CLUSTERING OF VARIABLES #######################
 #################################################################
+#library(ClustOfVar)
 #tree <- hclustvar(environment)
 #plot(tree)
-#stab <- stability(tree,B=100) #Ajuda a selecionar o número de partições. 
+#stab <- stability(tree,B=100) #To help in the selection of the number of partitions.
 
-### Abaixo, ajustar o número conforme o total desejado de partições:
-### P.ex., se o número desejado de clusters for 4:
+### Here, you need to adjust the routine to the number of selected clusters.
+### For example, if this number is 4:
 #P4<-cutreevar(tree,4,matsim=TRUE)
 #cluster <- P4$cluster
 #X <- environment
@@ -112,6 +113,7 @@ vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
 #write.table(env3,"env_sem colinearidades.csv")
 
 #environment = env3
+#View(environment)
 
 #################################################################
 #################################################################
