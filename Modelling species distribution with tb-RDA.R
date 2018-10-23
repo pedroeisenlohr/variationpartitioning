@@ -2,6 +2,10 @@
 #By: Pedro V. Eisenlohr - UNEMAT, Alta Floresta
 #Based on Bauman et al. (2018), Clappe et al. (2018), Blanchet et al. (2008) and others
 
+# Acknowledgments:
+# Sylvie Clappe
+# João Carlos Pires de Oliveira
+
 
 library(ade4)
 library(adespatial)
@@ -10,9 +14,8 @@ library(vegan)
 library(packfor)
 library(usdm)
 
-
 ##Species matrix
-species<-read.table(file.choose(),row.names=1,header=T,sep=",") ###community data
+species<-read.table(file.choose(),row.names=1,header=T,sep=",") ###community species data (abundance or binary)
 View(species)
 dim(species)
 unicates<-apply(species,2,sum) 
@@ -22,13 +25,13 @@ spp.h <- decostand(spp.u, method = "hell")
 View(spp.h)
 
 ##Environmental matrix
-environment <- read.table(file.choose(),row.names=1,header=T,sep=",")
+environment <- read.table(file.choose(),row.names=1,header=T,sep=",") #environmental variables
 View(environment)
 environment<-decostand(environment,"standardize") #caso queira padronizar a escala das variáveis ambientais
 View(environment)
 
 ##Spatial matrix
-ll<-read.table(file.choose(),row.names=1,header=T,sep=",")
+ll<-read.table(file.choose(),row.names=1,header=T,sep=",") #longitude and latitude
 View(ll)
 
 
@@ -102,15 +105,15 @@ vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
 #env2 <- read.table("PCAScores.csv",row.names=1,header=T,sep=" ")
 #dim(env2)
 #View(env2)
-#vif(env2)#Cerifique-se de que não haja nenhuma variável com VIF>10.
-#Não houve colinearidade? Então execute o comando abaixo:
+#vif(env2)#Be sure that no variable presents VIF>10.
+#In case of no colinearities, please run the command below:
 #env3=env2
-#Houve colinearidade? Então execute este comando:
+#In case of collinearities, please run the command below:
 #(v1<-vifcor(env2,th=0.8)) 
-#Caso permaneça alguma variável com VIF>10, refaça o procedimento acima abaixando o th.
+#If necessary, please return to the above command and adjust the threshold.
 #env3 <- exclude(env2, v1)
 #names(env3)
-#write.table(env3,"env_sem colinearidades.csv")
+#write.table(env3,"env_without_collinearities.csv")
 
 #environment = env3
 #View(environment)
@@ -139,11 +142,7 @@ env.sign <- sort(env.fwd$order)
 
 ##### OPTIMIZING THE SELECTION OF SMW #####
 ### The function listw.candidates is used to build the spatial weighting matrices that
-### we want to test and compare (with the listw.select function). We test a Gabriel's graph, 
-### a minimum spanning tree, and a distance-based connectivity defined by a threshold
-### distance corresponding to the smallest distance keeping all sites connected (i.e., 
-### the defaut value of d2). These connectivity matrices are then either not weighted 
-### (binary weighting), or weighted by the linearly decreasing function:
+### we want to test and compare (with the listw.select function).
 
 candidates <- listw.candidates(coord = ll, nb = c("del", "gab", "rel", "mst",
   			"pcnm", "dnear"), weights = c("binary", "flin", "fup", "fdown"))
@@ -202,7 +201,7 @@ res
 
 ###########################################################################
 ### Testing the environmental significance, after considering #############  
-### the effect of selected MEMs ###########################################
+################# the effect of selected MEMs #############################
 ###########################################################################
 env.rda<-rda(scores,env.red,spatial.red)
 summary(env.rda) ### Please observe the explanation of each axis.
@@ -212,13 +211,13 @@ test.env<-anova(env.rda, permutations = how(nperm=999))
 test.env
 plot(env.rda)
 
-#Criando objetos para cada variável ambiental selecionada:
+#Creating objects for each predictor in env.red:
 oxy<-data.frame(env.red$oxy)
 slo<-data.frame(env.red$slo)
 flo<-data.frame(env.red$flo)
 pho<-data.frame(env.red$pho)
 
-#Testando a significância de cada variável ambiental selecionada:
+#Testing significance of each predictor:
 env.rda.oxy <-rda(scores,oxy,cbind(slo,flo,pho,spatial.red))
 summary(env.rda.oxy)
 (anova(env.rda.oxy,permutations = how(nperm=999)))
@@ -238,7 +237,7 @@ summary(env.rda.pho)
 
 ###########################################################################
 ### Testing the spatial significance, after considering ###################  
-### the effect of selected env ############################################
+################# the effect of selected env ##############################
 ###########################################################################
 spatial.rda<-rda(scores,spatial.red,env.red)
 summary(spatial.rda) ### Please observe the explanation of each axis.
@@ -247,6 +246,5 @@ intersetcor(spatial.rda) #"interset" correlation
 test.spatial<-anova(spatial.rda, permutations = how(nperm=999))
 test.spatial
 #plot(spatial.rda)
-
 
 #END
