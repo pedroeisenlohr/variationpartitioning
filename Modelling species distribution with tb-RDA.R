@@ -106,15 +106,16 @@ vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
 #dim(env2)
 #View(env2)
 #vif(env2)#Be sure that no variable presents VIF>10.
+
 #In case of no colinearities, please run the command below:
 #env3=env2
 #In case of collinearities, please run the command below:
 #(v1<-vifcor(env2,th=0.8)) 
 #If necessary, please return to the above command and adjust the threshold.
 #env3 <- exclude(env2, v1)
+
 #names(env3)
 #write.table(env3,"env_without_collinearities.csv")
-
 #environment = env3
 #View(environment)
 
@@ -122,6 +123,14 @@ vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
 #################################################################
 #### END OF HIERARCHICAL CLUSTERING OF VARIABLES ################
 #################################################################
+
+
+### IMPORTANT: The forward selection procedure suggested above uses 
+### "scores" as response variable matrix. This can lead to different
+### results in comparison to "spp.h" as response variable matrix.
+### One possible strategy would be comparing the results of both models
+### and select one of them based on an objective criterion (R² adjusted, 
+### AIC etc.).
 
 
 # Forward selection of the environmental variables
@@ -143,6 +152,9 @@ env.sign <- sort(env.fwd$order)
 ##### OPTIMIZING THE SELECTION OF SMW #####
 ### The function listw.candidates is used to build the spatial weighting matrices that
 ### we want to test and compare (with the listw.select function).
+### I strongly recommend a careful reading on Bauman et al. (2018), mainly with respect
+### the trade-off between accuracy and power analysis, since a p-value correction for 
+### multiple tests (Sidak correction) is performed.
 
 candidates <- listw.candidates(coord = ll, nb = c("del", "gab", "rel", "mst",
   			"pcnm", "dnear"), weights = c("binary", "flin", "fup", "fdown"))
@@ -211,7 +223,31 @@ test.env<-anova(env.rda, permutations = how(nperm=999))
 test.env
 plot(env.rda)
 
+
+#### Model validation: checking for spatial independence of RDA residuals ####
+
+#Generating objects required for the analysis:
+ll <- read.table ("lat_long.csv",row.names=1,header=T,sep=",")
+X <- ll [,1]
+Y <- ll [,2]
+res <- residuals (env.rda)
+cor.res<-dist(res)
+
+#Pearson
+#(cor.mantel<-mantel.correlog(cor.res, XY=ll, nperm=9999))
+#summary(cor.mantel)
+#plot(cor.mantel)
+
+#Spearman)
+(mite.correlog2 <- mantel.correlog(cor.res, XY=ll, cutoff=FALSE, 
+                                  r.type="spearman", nperm=9999))
+summary(mite.correlog2)
+plot(mite.correlog2)
+
+
+#Testing significance for each predictor
 #Creating objects for each predictor in env.red:
+### For example, if your predictors are oxy, slo, flo and pho:
 oxy<-data.frame(env.red$oxy)
 slo<-data.frame(env.red$slo)
 flo<-data.frame(env.red$flo)
