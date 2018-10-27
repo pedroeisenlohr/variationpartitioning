@@ -125,13 +125,17 @@ vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
 #################################################################
 
 
+
+#################################################################
+### FORWARD SELECTION OF PREDICTORS
+#################################################################
+
 ### IMPORTANT: The forward selection procedure suggested above uses 
 ### "scores" as response variable matrix. This can lead to different
 ### results in comparison to "spp.h" as response variable matrix.
 ### One possible strategy would be comparing the results of both models
 ### and select one of them based on an objective criterion (R² adjusted, 
 ### AIC etc.).
-
 
 # Forward selection of the environmental variables
 env.rda<-rda(scores,environment)
@@ -227,18 +231,17 @@ plot(env.rda)
 #### Model validation: checking for spatial independence of RDA residuals ####
 
 #Generating objects required for the analysis:
-ll <- read.table ("lat_long.csv",row.names=1,header=T,sep=",")
 X <- ll [,1]
 Y <- ll [,2]
 res <- residuals (env.rda)
 cor.res<-dist(res)
 
-#Pearson
+#Mantel correlogram with Pearson correlation
 #(cor.mantel<-mantel.correlog(cor.res, XY=ll, nperm=9999))
 #summary(cor.mantel)
 #plot(cor.mantel)
 
-#Spearman)
+#Mantel correlogram with Spearman correlation
 (mite.correlog2 <- mantel.correlog(cor.res, XY=ll, cutoff=FALSE, 
                                   r.type="spearman", nperm=9999))
 summary(mite.correlog2)
