@@ -216,7 +216,7 @@ res
 
 
 ###########################################################################
-### Testing the environmental significance, after considering #############  
+####### Testing the environmental significance, after considering #########  
 ################# the effect of selected MEMs #############################
 ###########################################################################
 env.rda<-rda(spp.h,env.red,spatial.red)
@@ -225,7 +225,7 @@ spenvcor(env.rda) # species-environment correlation
 intersetcor(env.rda) #"interset" correlation
 test.env<-anova(env.rda, permutations = how(nperm=999))
 test.env
-plot(env.rda)
+#plot(env.rda)
 
 
 #### Model validation: checking for spatial independence of RDA residuals ####
@@ -275,7 +275,7 @@ summary(env.rda.pho)
 
 
 ###########################################################################
-### Testing the spatial significance, after considering ###################  
+######## Testing the spatial significance, after considering ##############  
 ################# the effect of selected env ##############################
 ###########################################################################
 spatial.rda<-rda(spp.h,spatial.red,env.red)
@@ -288,13 +288,16 @@ test.spatial
 
 
 ###########################################################################
-### Testing the significance of the whole model ######
+### Evaluating the whole model ######
 ###########################################################################
-all<-rda(spp.h,cbind(env.red,spatial.red))
+all.predictors <- cbind(env.red,spatial.red)
+all<-rda(spp.h,all.predictors)
 head(summary(all)) ### Please observe the explanation of each axis.
 teste.all<-anova(all, permutations = how(nperm=999))
 teste.all
 #plot(all)
-
+# To test each axis individually:
+rda.formula <- rda(spp.h~., data=all.predictors)
+anova(rda.formula, by="axis")
 
 #END
