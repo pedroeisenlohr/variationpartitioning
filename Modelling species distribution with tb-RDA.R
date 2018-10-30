@@ -220,7 +220,7 @@ res
 ################# the effect of selected MEMs #############################
 ###########################################################################
 env.rda<-rda(spp.h,env.red,spatial.red)
-summary(env.rda) ### Please observe the explanation of each axis.
+head(summary(env.rda)) ### Please observe the explanation of each axis.
 spenvcor(env.rda) # species-environment correlation
 intersetcor(env.rda) #"interset" correlation
 test.env<-anova(env.rda, permutations = how(nperm=999))
@@ -279,11 +279,22 @@ summary(env.rda.pho)
 ################# the effect of selected env ##############################
 ###########################################################################
 spatial.rda<-rda(spp.h,spatial.red,env.red)
-summary(spatial.rda) ### Please observe the explanation of each axis.
-spenvcor(spatial.rda) # species-environment correlation
+head(summary(spatial.rda)) ### Please observe the explanation of each axis.
+spenvcor(spatial.rda) # species-space correlation
 intersetcor(spatial.rda) #"interset" correlation
 test.spatial<-anova(spatial.rda, permutations = how(nperm=999))
 test.spatial
 #plot(spatial.rda)
+
+
+###########################################################################
+### Testing the significance of the whole model ######
+###########################################################################
+all<-rda(spp.h,cbind(env.red,spatial.red))
+head(summary(all)) ### Please observe the explanation of each axis.
+teste.all<-anova(all, permutations = how(nperm=999))
+teste.all
+#plot(all)
+
 
 #END
