@@ -1,6 +1,6 @@
 ### SELECION OF ENVIRONMENTAL AND SPATIAL DATA, AND VARIATION PARTITIONING ###
 #By: Pedro V. Eisenlohr - UNEMAT, Alta Floresta
-#Based on Bauman et al. (2018), Clappe et al. (2018), Blanchet et al. (2008) and others
+#Based on Bauman et al. (2018), Clappe et al. (2018), Blanchet et al. (2008), Chavent et al. (2012) and others
 
 # Acknowledgments:
 # Sylvie Clappe
@@ -79,10 +79,11 @@ vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
 # If VIF > 10, consider using Hierarchical Clustering of Variables, as follows:
 
 
-#################################################################
-#################################################################
-#### HIERARCHICAL CLUSTERING OF VARIABLES #######################
-#################################################################
+----------------------------------------------------------------------
+
+######################################################################
+#### HIERARCHICAL CLUSTERING OF VARIABLES (Chavent et al. 2012) ######
+######################################################################
 #library(ClustOfVar)
 #tree <- hclustvar(environment)
 #plot(tree)
@@ -105,7 +106,7 @@ vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
 #env2 <- read.table("PCAScores.csv",row.names=1,header=T,sep=" ")
 #dim(env2)
 #View(env2)
-#vif(env2)#Be sure that no variable presents VIF>10.
+#vif(env2) #Be sure that no variable presents VIF>10.
 
 #In case of no colinearities, please run the command below:
 #env3=env2
@@ -120,11 +121,10 @@ vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
 #View(environment)
 
 #################################################################
-#################################################################
 #### END OF HIERARCHICAL CLUSTERING OF VARIABLES ################
 #################################################################
 
-
+-----------------------------------------------------------------
 
 #################################################################
 ### FORWARD SELECTION OF PREDICTORS
@@ -238,9 +238,9 @@ test.env<-anova(env.rda, permutations = how(nperm=999))
 test.env
 #plot(env.rda)
 
-
+##############################################################################
 #### Model validation: checking for spatial independence of RDA residuals ####
-
+##############################################################################
 #Generating objects required for the analysis:
 X <- ll [,1]
 Y <- ll [,2]
