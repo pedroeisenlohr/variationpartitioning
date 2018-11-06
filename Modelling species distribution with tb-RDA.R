@@ -36,7 +36,7 @@ View(ll)
 
 
 
-#### CONDENSING SPECIES MATRIX ##########
+#### CONDENSING SPECIES MATRIX (OPTIONAL) ##########
 (length.pca <- (nrow(spp.h)-1))
 pca.species.p <- dudi.pca(spp.h, scannf = F, nf = length.pca)
 summary(pca.species.p)
@@ -74,7 +74,7 @@ dim(scores)
 ### before proceeding with the next step. An interesting way to address this
 ### issue is applying Hierarchical Clustering of Variables (Chavent et al. 2012).
 # Checking collinearities
-env.rda <- rda(spp.h, environment)
+env.rda <- rda(spp.h, environment) #If you prefer to work with condensed response matrix, please change 'spp.h' by 'scores'
 vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
 # If VIF > 10, consider using Hierarchical Clustering of Variables, as follows:
 
@@ -138,7 +138,7 @@ vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
 ### AIC etc.).
 
 # Forward selection of the environmental variables
-env.rda<-rda(spp.h,environment)
+env.rda<-rda(spp.h,environment) #If you prefer to work with condensed response matrix, please change 'spp.h' by 'scores'
 anova(env.rda, permutations = how(nperm=999))
 ### According to Blanchet et al. (2008): "If, and only if, the global 
 ### test is significant, one can proceed with forward selection"
@@ -169,7 +169,9 @@ names(candidates)
 ### Optimization the selection of a subset of SWM among the candidates generated above,
 ### using the corrected significance threshold calculated ("forward"):
 (W_sel_fwd <- listw.select(spp.h, candidates, MEM.autocor = "positive", method = "FWD",
-                    p.adjust = TRUE, MEM.all = TRUE, nperm = 999))
+                    p.adjust = TRUE, MEM.all = TRUE, nperm = 999)) 
+#If you prefer to work with condensed response matrix, please change 'spp.h' by 'scores' above.
+
 ### Some characteristics of the best spatial model:
 # Best SWM:
 W_sel_fwd$best.id
@@ -202,18 +204,27 @@ dim(mem.all)
 #############################################
 ########## VARIATION PARTITIONING ###########
 #############################################
-scores.dudi <- dudi.pca(spp.h, scannf = F, nf=length.pca3) #nf refers to the number of PCA components retained. Default is 2.
-
-vprda <- varipart(scores.dudi, env.red, spatial.red, nrepet=999)#classic variation partitioning
+vprda <- varipart(spp.h, env.red, spatial.red, scale=TRUE) #classic variation partitioning
 vprda
 
-vprdaMSR <- msr(vprda, mem.all, nrepet = 999)#new variation partitioning 
+vprdaMSR <- msr(vprda, mem.all, nrepet = 999) #new variation partitioning 
 vprdaMSR
 
 res <- rbind(vprda$R2.adj, vprdaMSR$R2.adj.msr)
 rownames(res) <- c("Standard VP", "MSR VP")
 res
 
+
+### Alternatively, one can use a condensed response matrix that retain 95% of total inertia ('pca.species'):
+#vprda <- varipart(pca.species, env.red, spatial.red, scale=TRUE) #classic variation partitioning
+#vprda
+
+#vprdaMSR <- msr(vprda, mem.all, nrepet = 999) #new variation partitioning 
+#vprdaMSR
+
+#res <- rbind(vprda$R2.adj, vprdaMSR$R2.adj.msr)
+#rownames(res) <- c("Standard VP", "MSR VP")
+#res
 
 ###########################################################################
 ####### Testing the environmental significance, after considering #########  
