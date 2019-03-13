@@ -27,7 +27,7 @@ View(spp.h)
 environment <- read.table(file.choose(),row.names=1,header=T,sep=",") #environmental variables
 View(environment)
 dim(environment)
-#environment<-decostand(environment,"standardize") #caso queira padronizar a escala das variáveis ambientais
+#environment<-decostand(environment,"standardize") #if you wish to standardize the scale of environmental variables
 #View(environment)
 
 ##Spatial matrix
@@ -159,7 +159,7 @@ names(candidates)
 ### using the corrected significance threshold calculated ("forward"):
 (W_sel_fwd <- listw.select(scores.pcoa, candidates, MEM.autocor = "positive", method = "FWD",
                     p.adjust = TRUE, MEM.all = FALSE, nperm = 999)) 
-#If you prefer to work with condensed response matrix, please change 'spp.h' by 'scores' above.
+#If you prefer to work with the whole response matrix, please change 'scores.pcoa' by 'spp.h' above.
 
 ### Some characteristics of the best spatial model:
 # Best SWM:
