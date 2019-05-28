@@ -68,8 +68,7 @@ dim(scores.pcoa)
 ### before proceeding with the next step. An interesting way to address this
 ### issue is applying Hierarchical Clustering of Variables (Chavent et al. 2012).
 # Checking collinearities
-env.rda <- rda(scores.pcoa, environment) #If you prefer to work with the whole response matrix, please change 'scores.pcoa' by 'spp.h'
-vif.cca(env.rda) ### Checking for collinearity. VIF should be < 10.
+vif(environment) ### Checking for collinearity. VIF should be < 10.
 # If VIF > 10, consider using Hierarchical Clustering of Variables, as follows:
 
 
@@ -130,7 +129,7 @@ anova(env.rda, permutations = how(nperm=999))
 ### According to Blanchet et al. (2008): "If, and only if, the global 
 ### test is significant, one can proceed with forward selection"
 (env.R2a <- RsquareAdj(env.rda)$adj.r.squared)
-env.fwd <- packfor::forward.sel(scores.pcoa, environment, adjR2thresh=env.R2a)
+env.fwd <- adespatial::forward.sel(scores.pcoa, environment, adjR2thresh=env.R2a)
 env.fwd #List of selected variables
 env.sign <- sort(env.fwd$order)
 env.red <- environment[,c(env.sign)]
@@ -221,145 +220,5 @@ res
 #res <- rbind(vprda.all$R2.adj, vprdaMSR$R2.adj.msr)
 #rownames(res) <- c("Standard VP", "MSR VP")
 #res
-
-###########################################################################
-####### Testing the environmental significance, after considering #########  
-################# the effect of selected MEMs #############################
-###########################################################################
-env.rda<-rda(scores.pcoa,env.red,spatial.red)
-head(summary(env.rda)) ### Please observe the explanation of each axis.
-spenvcor(env.rda) # species-environment correlation
-intersetcor(env.rda) #"interset" correlation
-test.env<-anova(env.rda, permutations = how(nperm=999))
-test.env
-#plot(env.rda)
-
-##############################################################################
-#### Model validation: checking for spatial independence of RDA residuals ####
-##############################################################################
-
-##### Pending some adjustments recommended by David Bauman (personal contact) #####
-
-#Generating objects required for the analysis:
-X <- ll [,1]
-Y <- ll [,2]
-res <- residuals (env.rda)
-cor.res<-dist(res)
-
-#Mantel correlogram with Pearson correlation
-#(cor.mantel<-mantel.correlog(cor.res, XY=ll, nperm=9999))
-#summary(cor.mantel)
-#plot(cor.mantel)
-
-#Mantel correlogram with Spearman correlation
-(mite.correlog2 <- mantel.correlog(cor.res, XY=ll, cutoff=FALSE, 
-                                  r.type="spearman", nperm=99))
-summary(mite.correlog2)
-plot(mite.correlog2)
-
-
-#Testing significance for each predictor
-#Creating objects for each predictor in env.red:
-### For example, if your predictors are oxy, slo, flo and pho:
-oxy<-data.frame(env.red$oxy)
-slo<-data.frame(env.red$slo)
-flo<-data.frame(env.red$flo)
-pho<-data.frame(env.red$pho)
-
-#Testing significance of each predictor:
-env.rda.oxy <-rda(spp.h,oxy,cbind(slo,flo,pho,spatial.red))
-summary(env.rda.oxy)
-(anova(env.rda.oxy,permutations = how(nperm=999)))
-
-env.rda.slo <-rda(spp.h,slo,cbind(oxy,flo,pho,spatial.red))
-summary(env.rda.slo)
-(anova(env.rda.slo,permutations = how(nperm=999)))
-
-env.rda.flo <-rda(spp.h,flo,cbind(oxy,slo,pho,spatial.red))
-summary(env.rda.flo)
-(anova(env.rda.flo,permutations = how(nperm=999)))
-
-env.rda.pho <-rda(spp.h,pho,cbind(oxy,flo,slo,spatial.red))
-summary(env.rda.pho)
-(anova(env.rda.pho,permutations = how(nperm=999)))
-
-
-###########################################################################
-######## Testing the spatial significance, after considering ##############  
-################# the effect of selected env ##############################
-###########################################################################
-spatial.rda<-rda(scores.pcoa,spatial.red,env.red)
-head(summary(spatial.rda)) ### Please observe the explanation of each axis.
-spenvcor(spatial.rda) # species-space correlation
-intersetcor(spatial.rda) #"interset" correlation
-test.spatial<-anova(spatial.rda, permutations = how(nperm=999))
-test.spatial
-#plot(spatial.rda)
-
-
-###########################################################################
-### Evaluating the whole model ######
-###########################################################################
-all.predictors <- cbind(env.red,spatial.red)
-all<-rda(scores.pcoa,all.predictors)
-head(summary(all)) ### Please observe the explanation of each axis.
-teste.all<-anova(all, permutations = how(nperm=999))
-teste.all
-#plot(all)
-# To test each axis individually:
-rda.formula <- rda(scores.pcoa~., data=all.predictors)
-anova(rda.formula, by="axis")
-
-#Testing significance for each predictor.
-### In this case, the MEMs selected above were MEM3,MEM6,MEM4,MEM1,MEM9,MEM10,MEM2,MEM7,MEM16,MEM11,MEM8
-#Creating objects for each predictor in spatial.red:
-spatial.red<-as.data.frame(spatial.red)
-MEM3<-data.frame(spatial.red$MEM3)
-MEM6<-data.frame(spatial.red$MEM6)
-MEM4<-data.frame(spatial.red$MEM4)
-MEM1<-data.frame(spatial.red$MEM1)
-MEM9<-data.frame(spatial.red$MEM9)
-MEM10<-data.frame(spatial.red$MEM10)
-MEM2<-data.frame(spatial.red$MEM2)
-MEM7<-data.frame(spatial.red$MEM7)
-MEM16<-data.frame(spatial.red$MEM16)
-MEM11<-data.frame(spatial.red$MEM11)
-MEM8<-data.frame(spatial.red$MEM8)
-all.spatial<-cbind(MEM3,MEM6,MEM4,MEM1,MEM9,MEM10,MEM2,MEM7,MEM16,MEM11,MEM8)
-View(all.spatial)
-
-#Testing significance of each predictor:
-spatial.rda.MEM3 <-rda(scores.pcoa,MEM3,cbind(all.spatial[,-c(1)],env.red))
-(anova(spatial.rda.MEM3,permutations = how(nperm=999)))
-
-spatial.rda.MEM6 <-rda(scores.pcoa,MEM6,cbind(all.spatial[,-c(2)],env.red))
-(anova(spatial.rda.MEM6,permutations = how(nperm=999)))
-
-spatial.rda.MEM4 <-rda(scores.pcoa,MEM4,cbind(all.spatial[,-c(3)],env.red))
-(anova(spatial.rda.MEM4,permutations = how(nperm=999)))
-
-spatial.rda.MEM1 <-rda(scores.pcoa,MEM1,cbind(all.spatial[,-c(4)],env.red))
-(anova(spatial.rda.MEM1,permutations = how(nperm=999)))
-
-spatial.rda.MEM9 <-rda(scores.pcoa,MEM9,cbind(all.spatial[,-c(5)],env.red))
-(anova(spatial.rda.MEM9,permutations = how(nperm=999)))
-
-spatial.rda.MEM10 <-rda(scores.pcoa,MEM10,cbind(all.spatial[,-c(6)],env.red))
-(anova(spatial.rda.MEM10,permutations = how(nperm=999)))
-
-spatial.rda.MEM2 <-rda(scores.pcoa,MEM2,cbind(all.spatial[,-c(7)],env.red))
-(anova(spatial.rda.MEM2,permutations = how(nperm=999)))
-
-spatial.rda.MEM7 <-rda(scores.pcoa,MEM7,cbind(all.spatial[,-c(8)],env.red))
-(anova(spatial.rda.MEM7,permutations = how(nperm=999)))
-
-spatial.rda.MEM16 <-rda(scores.pcoa,MEM16,cbind(all.spatial[,-c(9)],env.red))
-(anova(spatial.rda.MEM16,permutations = how(nperm=999)))
-
-spatial.rda.MEM11 <-rda(scores.pcoa,MEM11,cbind(all.spatial[,-c(10)],env.red))
-(anova(spatial.rda.MEM11,permutations = how(nperm=999)))
-
-spatial.rda.MEM8 <-rda(scores.pcoa,MEM8,cbind(all.spatial[,-c(11)],env.red))
-(anova(spatial.rda.MEM8,permutations = how(nperm=999)))
 
 #END
