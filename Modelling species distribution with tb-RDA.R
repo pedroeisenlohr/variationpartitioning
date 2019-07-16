@@ -73,12 +73,12 @@ barplot(t(cbind(100*ev/sum(ev),bsm$p[n:1])), beside=TRUE,
 legend("topright", c("% eigenvalue", "Broken stick model"), 
        pch=15, col=c("bisque",2), bty="n")
 source("evplot.R")
-evplot(ev.r)  #se utilizar como argumento ev.r, somente utilize o gráfico inferior.
-              #Se utilizar como argumento ev, pode utilizar ambos os gráficos.
+#evplot(ev.r) #In case of using ev.r, please use only the lower graphic.
+evplot(ev)  #In case of using ev, you can use both graphics.
 
 # Alternatively, you may retain the significant axes (permutation's approach):
 library(PCPS)
-pcoa.sig <- pcoa.sig(spp.u, method="bray", axis=3, by=500, iterations=100)
+pcoa.sig <- pcoa.sig(spp.u, method="bray", axis=6, by=100, iterations=1000)
 
 # If, for instance, the first three axes are retained in the above analysis:
 (scores.pcoa.3 <- scores.pcoa[,1:3])
@@ -87,7 +87,7 @@ dim(scores.pcoa.3)
 
 # Plot of the sites
 dev.new(title="PCoA")
-ordiplot(scores(pcoa.species, choices=c(1,2)), type="t", main="PCoA - Seca")
+ordiplot(scores(pcoa.species, choices=c(1,2)), type="t", main="PCoA")
 abline(h=0, lty=3)
 abline(v=0, lty=3)
 # Add weighted average projection of species
@@ -165,7 +165,7 @@ vif(environment)
 #################################################################
 
 # Forward selection of the environmental variables
-env.rda <- rda(scores.pcoa.3,environment) #If you prefer to work with the whole response matrix, please change 'scores.pcoa' by 'spp.h'
+env.rda <- rda(scores.pcoa.3,environment) #If you prefer to work with the whole response matrix, please change 'scores.pcoa.3' by 'spp.h'
 env.rda
 anova(env.rda, permutations = how(nperm=999))
 ### According to Blanchet et al. (2008): "If, and only if, the global 
@@ -200,7 +200,7 @@ names(candidates)
 ### using the corrected significance threshold calculated ("forward"):
 (W_sel_fwd <- listw.select(scores.pcoa.3, candidates, MEM.autocor = "positive", method = "FWD",
                     p.adjust = TRUE, MEM.all = FALSE, nperm = 999)) 
-#If you prefer to work with the whole response matrix, please change 'scores.pcoa' by 'spp.h' above.
+#If you prefer to work with the whole response matrix, please change 'scores.pcoa.3' by 'spp.h' above.
 
 save.image()
 
@@ -303,14 +303,13 @@ all<-rda(scores.pcoa.3,all.predictors)
 head(summary(all)) ### Please observe the explanation of each axis.
 teste.all<-anova(all, permutations = how(nperm=999))
 teste.all
-#plot(all)
 spenvcor(all) # species-predictors correlation
 intersetcor(all) #"interset" correlation
 envfit(all, all.predictors) #fits environmental vectors or factors onto an ordination
 # To test each axis individually:
 rda.formula <- rda(scores.pcoa.3~., data=all.predictors)
 anova(rda.formula, by="axis")
-
+#plot(all)
 
 save.image()
 
