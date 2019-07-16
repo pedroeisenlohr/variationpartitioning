@@ -13,6 +13,9 @@ library(vegan)
 library(usdm)
 library(ape)
 
+setwd(choose.dir())
+dir()
+
 ##Species matrix
 species<-read.table(file.choose(),row.names=1,header=T,sep=",") ###community species data (abundance or binary)
 View(species)
@@ -24,7 +27,7 @@ spp.h <- decostand(spp.u, method = "hell")
 View(spp.h)
 
 ##Environmental matrix
-environment <- read.table(file.choose(),row.names=1,header=T,sep=",") #environmental variables
+environment <- read.table(file.choose(),row.names=1,header=T,sep=" ") #environmental variables
 View(environment)
 dim(environment)
 #environment<-decostand(environment,"standardize") #if you wish to standardize the scale of environmental variables
@@ -37,7 +40,7 @@ dim(ll)
 
 
 #### CONDENSING SPECIES MATRIX WITH A PCoA (OPTIONAL) ##########
-spp.dist <- vegdist(spp.u, method="bray")
+spp.dist <- vegdist(spp.u, method="bray") #Bray-Curtis dissimilarity index
 pcoa.species <- cmdscale(spp.dist, k=(nrow(spp.u)-1), eig=TRUE)
 scores.pcoa<-pcoa.species$points
 head(scores.pcoa,30)
@@ -51,9 +54,47 @@ head(scores.pcoa,30)
 (scores.pcoa <- scores.pcoa[,1:length.pcoa])
 head(scores.pcoa,20)
 dim(scores.pcoa)
+
+# Alternatively, you may retain the significant axes (Broken-stick's approach):
+ev <- pcoa.species$eig
+(ev.r <- ev[1:30])
+n <- length(ev)
+bsm <- data.frame(j=seq(1:n), p=0)
+bsm$p[1] <- 1/n
+for (i in 2:n)
+{
+  bsm$p[i] = bsm$p[i-1] + (1/(n + 1 - i))
+}
+bsm$p <- 100*bsm$p/n
+bsm
+dev.new(title="PCoA eigenvalues")
+barplot(t(cbind(100*ev/sum(ev),bsm$p[n:1])), beside=TRUE, 
+        main="% variance", col=c("bisque",2), las=2)
+legend("topright", c("% eigenvalue", "Broken stick model"), 
+       pch=15, col=c("bisque",2), bty="n")
+source("evplot.R")
+evplot(ev.r)  #se utilizar como argumento ev.r, somente utilize o gráfico inferior.
+              #Se utilizar como argumento ev, pode utilizar ambos os gráficos.
+
+# Alternatively, you may retain the significant axes (permutation's approach):
+library(PCPS)
+pcoa.sig <- pcoa.sig(spp.u, method="bray", axis=3, by=500, iterations=100)
+
+# If, for instance, the first three axes are retained in the above analysis:
+(scores.pcoa.3 <- scores.pcoa[,1:3])
+head(scores.pcoa.3,20)
+dim(scores.pcoa.3)
+
+# Plot of the sites
+dev.new(title="PCoA")
+ordiplot(scores(pcoa.species, choices=c(1,2)), type="t", main="PCoA - Seca")
+abline(h=0, lty=3)
+abline(v=0, lty=3)
+# Add weighted average projection of species
+spe.wa <- wascores(pcoa.species$points[,1:2], spp.u)
+text(spe.wa, rownames(spe.wa), cex=0.7, col="red")
+write.table(spe.wa,"Species_Scores_PCoA-vazante.csv")
 ##################################################################
-
-
 
 
 
@@ -68,7 +109,7 @@ dim(scores.pcoa)
 ### before proceeding with the next step. An interesting way to address this
 ### issue is applying Hierarchical Clustering of Variables (Chavent et al. 2012).
 # Checking collinearities
-vif(environment) ### Checking for collinearity. VIF should be < 10.
+vif(environment)
 # If VIF > 10, consider using Hierarchical Clustering of Variables, as follows:
 
 
@@ -124,12 +165,13 @@ vif(environment) ### Checking for collinearity. VIF should be < 10.
 #################################################################
 
 # Forward selection of the environmental variables
-env.rda<-rda(scores.pcoa,environment) #If you prefer to work with the whole response matrix, please change 'scores.pcoa' by 'spp.h'
+env.rda <- rda(scores.pcoa.3,environment) #If you prefer to work with the whole response matrix, please change 'scores.pcoa' by 'spp.h'
+env.rda
 anova(env.rda, permutations = how(nperm=999))
 ### According to Blanchet et al. (2008): "If, and only if, the global 
 ### test is significant, one can proceed with forward selection"
 (env.R2a <- RsquareAdj(env.rda)$adj.r.squared)
-env.fwd <- adespatial::forward.sel(scores.pcoa, environment, adjR2thresh=env.R2a)
+env.fwd <- forward.sel(scores.pcoa.3, environment)
 env.fwd #List of selected variables
 env.sign <- sort(env.fwd$order)
 env.red <- environment[,c(env.sign)]
@@ -156,9 +198,11 @@ names(candidates)
 
 ### Optimization the selection of a subset of SWM among the candidates generated above,
 ### using the corrected significance threshold calculated ("forward"):
-(W_sel_fwd <- listw.select(scores.pcoa, candidates, MEM.autocor = "positive", method = "FWD",
+(W_sel_fwd <- listw.select(scores.pcoa.3, candidates, MEM.autocor = "positive", method = "FWD",
                     p.adjust = TRUE, MEM.all = FALSE, nperm = 999)) 
 #If you prefer to work with the whole response matrix, please change 'scores.pcoa' by 'spp.h' above.
+
+save.image()
 
 ### Some characteristics of the best spatial model:
 # Best SWM:
@@ -194,11 +238,13 @@ mem.positive
 class(mem.positive)
 dim(mem.positive)
 
+save.image()
+
 
 #############################################
 ########## VARIATION PARTITIONING ###########
 #############################################
-vprda <- varipart(scores.pcoa, env.red, spatial.red, scale=TRUE) #classic variation partitioning
+vprda <- varipart(scores.pcoa.3, env.red, spatial.red, scale=TRUE) #classic variation partitioning
 vprda
 
 vprdaMSR <- msr(vprda, mem.all, nrepet = 999) #new variation partitioning (Clappe et al. 2018)
@@ -214,11 +260,58 @@ res
 #vprda.all <- varipart(ssp.h, env.red, spatial.red, scale=TRUE) #classic variation partitioning
 #vprda.all
 
-#vprdaMSR <- msr(vprda.all, mem.all, nrepet = 999) #new variation partitioning 
+#vprdaMSR <- msr(vprda, mem.all, nrepet = 999) #new variation partitioning 
 #vprdaMSR
 
 #res <- rbind(vprda.all$R2.adj, vprdaMSR$R2.adj.msr)
 #rownames(res) <- c("Standard VP", "MSR VP")
 #res
+
+###########################################################################
+####### Testing the environmental significance, after considering #########  
+################# the effect of selected MEMs #############################
+###########################################################################
+env.rda<-rda(scores.pcoa.3,env.red,spatial.red)
+head(summary(env.rda)) ### Please observe the explanation of each axis.
+spenvcor(env.rda) # species-environment correlation
+intersetcor(env.rda) #"interset" correlation
+envfit(env.rda,env.red) #fits environmental vectors or factors onto an ordination
+test.env<-anova(env.rda, permutations = how(nperm=999))
+test.env
+#plot(env.rda)
+
+
+###########################################################################
+######## Testing the spatial significance, after considering ##############  
+################# the effect of selected env ##############################
+###########################################################################
+spatial.rda<-rda(scores.pcoa.3,spatial.red,env.red)
+head(summary(spatial.rda)) ### Please observe the explanation of each axis.
+spenvcor(spatial.rda) # species-space correlation
+intersetcor(spatial.rda) #"interset" correlation
+envfit(spatial.rda, spatial.red) #fits environmental vectors or factors onto an ordination
+test.spatial<-anova(spatial.rda, permutations = how(nperm=999))
+test.spatial
+#plot(spatial.rda)
+
+
+###########################################################################
+### Evaluating the whole model ######
+###########################################################################
+all.predictors <- cbind(env.red,spatial.red)
+all<-rda(scores.pcoa.3,all.predictors)
+head(summary(all)) ### Please observe the explanation of each axis.
+teste.all<-anova(all, permutations = how(nperm=999))
+teste.all
+#plot(all)
+spenvcor(all) # species-predictors correlation
+intersetcor(all) #"interset" correlation
+envfit(all, all.predictors) #fits environmental vectors or factors onto an ordination
+# To test each axis individually:
+rda.formula <- rda(scores.pcoa.3~., data=all.predictors)
+anova(rda.formula, by="axis")
+
+
+save.image()
 
 #END
