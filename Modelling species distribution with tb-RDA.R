@@ -23,14 +23,14 @@ dim(species)
 unicates<-apply(species,2,sum) 
 spp.u<-species[,which(unicates>1)] ###removing unicates
 dim(spp.u)
-spp.h <- decostand(spp.u, method = "hell")
-View(spp.h)
+#spp.h <- decostand(spp.u, method = "hell")
+#View(spp.h)
 
 ##Environmental matrix
-environment <- read.table(file.choose(),row.names=1,header=T,sep=" ") #environmental variables
+environment <- read.table(file.choose(),row.names=1,header=T,sep=",") #environmental variables
 View(environment)
 dim(environment)
-#environment<-decostand(environment,"standardize") #if you wish to standardize the scale of environmental variables
+#environment<-decostand(environment,"standardize") #caso queira padronizar a escala das variáveis ambientais
 #View(environment)
 
 ##Spatial matrix
@@ -41,6 +41,8 @@ dim(ll)
 
 #### CONDENSING SPECIES MATRIX WITH A PCoA (OPTIONAL) ##########
 spp.dist <- vegdist(spp.u, method="bray") #Bray-Curtis dissimilarity index
+#library(recluster)
+#spp.dist.s <- recluster.dist(spp.u) #Simpson dissimilarity index
 pcoa.species <- cmdscale(spp.dist, k=(nrow(spp.u)-1), eig=TRUE)
 scores.pcoa<-pcoa.species$points
 head(scores.pcoa,30)
@@ -56,8 +58,10 @@ head(scores.pcoa,20)
 dim(scores.pcoa)
 
 # Alternatively, you may retain the significant axes (Broken-stick's approach):
+# Eigenvalues
 ev <- pcoa.species$eig
 (ev.r <- ev[1:30])
+# Broken stick model
 n <- length(ev)
 bsm <- data.frame(j=seq(1:n), p=0)
 bsm$p[1] <- 1/n
@@ -73,12 +77,11 @@ barplot(t(cbind(100*ev/sum(ev),bsm$p[n:1])), beside=TRUE,
 legend("topright", c("% eigenvalue", "Broken stick model"), 
        pch=15, col=c("bisque",2), bty="n")
 source("evplot.R")
-#evplot(ev.r) #In case of using ev.r, please use only the lower graphic.
-evplot(ev)  #In case of using ev, you can use both graphics.
-
+evplot(ev.r)  #se utilizar como argumento ev.r, somente utilize o gráfico inferior.
+              #Se utilizar como argumento ev, pode utilizar ambos os gráficos.
 # Alternatively, you may retain the significant axes (permutation's approach):
-library(PCPS)
-pcoa.sig <- pcoa.sig(spp.u, method="bray", axis=6, by=100, iterations=1000)
+#library(PCPS)
+#pcoa.sig <- pcoa.sig(spp.u, method="bray", axis=3, iterations=1000)
 
 # If, for instance, the first three axes are retained in the above analysis:
 (scores.pcoa.3 <- scores.pcoa[,1:3])
@@ -118,41 +121,60 @@ vif(environment)
 ######################################################################
 #### HIERARCHICAL CLUSTERING OF VARIABLES (Chavent et al. 2012) ######
 ######################################################################
-#library(ClustOfVar)
-#tree <- hclustvar(environment)
-#plot(tree)
-#stab <- stability(tree,B=999) #To help in the selection of the number of partitions.
+library(ClustOfVar)
+tree <- hclustvar(environment)
+plot(tree)
+stab <- stability(tree,B=1000) #To help in the selection of the number of partitions.
+plot(stab)
 
 ### Here, you need to adjust the routine to the number of selected clusters.
-### For example, if this number is 4:
-#P4<-cutreevar(tree,4,matsim=TRUE)
-#cluster <- P4$cluster
-#X <- environment
-#princomp(X[,which(cluster==1)],cor=TRUE)$sdev^2
-#princomp(X[,which(cluster==2)],cor=TRUE)$sdev^2
-#princomp(X[,which(cluster==3)],cor=TRUE)$sdev^2
-#princomp(X[,which(cluster==4)],cor=TRUE)$sdev^2
-#P4$cluster
-#clusterID <- P4$var
-#clusterID
-#write.table(P4$scores,"PCAScores.csv")
+### For example, if this number is 22:
+P22<-cutreevar(tree,22,matsim=TRUE)
+cluster <- P22$cluster
+X <- environment
+princomp(X[,which(cluster==1)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==2)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==3)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==4)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==5)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==6)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==7)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==8)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==9)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==10)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==11)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==12)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==13)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==14)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==15)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==16)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==17)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==18)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==19)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==20)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==21)],cor=TRUE)$sdev^2
+princomp(X[,which(cluster==22)],cor=TRUE)$sdev^2
+P22$cluster
+clusterID <- P22$var
+clusterID
+write.table(P22$scores,"PCAScores.csv")
 
-#env2 <- read.table("PCAScores.csv",row.names=1,header=T,sep=" ")
-#dim(env2)
-#View(env2)
-#vif(env2) #Be sure that no variable presents VIF>10.
+env2 <- read.table("PCAScores.csv",row.names=1,header=T,sep=" ")
+dim(env2)
+View(env2)
+vif(env2) #Be sure that no variable presents VIF>10.
 
 #In case of no colinearities, please run the command below:
-#env3=env2
-#In case of collinearities, please run the command below:
+env3=env2
+#In case of collinearities, please run the commands below (or re-define the number of groups above):
 #(v1<-vifcor(env2,th=0.8)) 
-#If necessary, please return to the above command and adjust the threshold.
 #env3 <- exclude(env2, v1)
+#vif(env3)
 
-#names(env3)
-#write.table(env3,"env_without_collinearities.csv")
-#environment = env3
-#View(environment)
+names(env3)
+write.table(env3,"env_without_collinearities.csv")
+environment = env3
+View(environment)
 
 #################################################################
 #### END OF HIERARCHICAL CLUSTERING OF VARIABLES ################
@@ -165,18 +187,20 @@ vif(environment)
 #################################################################
 
 # Forward selection of the environmental variables
-env.rda <- rda(scores.pcoa.3,environment) #If you prefer to work with the whole response matrix, please change 'scores.pcoa.3' by 'spp.h'
+env.rda <- rda(scores.pcoa.3,environment) #If you prefer to work with the whole response matrix, please change 'scores.pcoa' by 'spp.h'
 env.rda
 anova(env.rda, permutations = how(nperm=999))
 ### According to Blanchet et al. (2008): "If, and only if, the global 
 ### test is significant, one can proceed with forward selection"
 (env.R2a <- RsquareAdj(env.rda)$adj.r.squared)
-env.fwd <- forward.sel(scores.pcoa.3, environment)
+env.fwd <- forward.sel(scores.pcoa.3, environment, adjR2thresh = env.R2a)
 env.fwd #List of selected variables
 env.sign <- sort(env.fwd$order)
 env.red <- environment[,c(env.sign)]
 head(env.red)
-
+vif(env.red)
+env.rda.selected <- rda(scores.pcoa.3, env.red)
+(env.R2a.selected <- RsquareAdj(env.rda.selected)$adj.r.squared)
 save.image()
 
 #############################################
@@ -216,6 +240,8 @@ dim(SWM.selected)
 # Write the selected MEMs to a new object
 spatial.red <- as.matrix(SWM.selected)
 class(spatial.red)
+space.rda.selected <- rda(scores.pcoa.3, spatial.red)
+(env.R2a <- RsquareAdj(space.rda.selected)$adj.r.squared)
 
 # Creating an object with the name of the selected SWM:
 x<-data.frame(names(candidates),W_sel_fwd$candidates$R2Adj.select)
@@ -257,7 +283,7 @@ res
 
 
 ### Alternatively, one can use the whole response matrix:
-#vprda.all <- varipart(ssp.h, env.red, spatial.red, scale=TRUE) #classic variation partitioning
+#vprda.all <- varipart(spp.h, env.red, spatial.red, scale=TRUE) #classic variation partitioning
 #vprda.all
 
 #vprdaMSR <- msr(vprda, mem.all, nrepet = 999) #new variation partitioning 
@@ -303,13 +329,14 @@ all<-rda(scores.pcoa.3,all.predictors)
 head(summary(all)) ### Please observe the explanation of each axis.
 teste.all<-anova(all, permutations = how(nperm=999))
 teste.all
+#plot(all)
 spenvcor(all) # species-predictors correlation
 intersetcor(all) #"interset" correlation
 envfit(all, all.predictors) #fits environmental vectors or factors onto an ordination
 # To test each axis individually:
 rda.formula <- rda(scores.pcoa.3~., data=all.predictors)
 anova(rda.formula, by="axis")
-#plot(all)
+
 
 save.image()
 
