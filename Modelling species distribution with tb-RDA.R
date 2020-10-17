@@ -192,9 +192,11 @@ save.image()
 #############################################
 ########## VARIATION PARTITIONING ###########
 #############################################
+source("varipart.R") #available upon request
 vprda <- varipart(spp.h, env.red, spatial.red) #classic variation partitioning
 vprda
 
+source("msr.varipart.R") #available upon request
 vprdaMSR <- msr.varipart(vprda, mem.all, nrepet = 999) #new variation partitioning (Clappe et al. 2018)
 vprdaMSR #observe the result for fraction [a]. To obtain the significance of fraction [c], consider the result obtained by vprda.
 
