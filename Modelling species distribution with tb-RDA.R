@@ -82,22 +82,11 @@ clusterID <- P$var
 clusterID
 write.table(P$scores,"PCAScores.csv")
 
-env2 <- read.table("PCAScores.csv",row.names=1,header=T,sep=" ")
-dim(env2)
-View(env2)
-vif(env2) #Be sure that no variable presents VIF>10.
-
-#In case of no colinearities, please run the command below:
-env3=env2
-
-#In case of collinearities, please run the commands below (or re-define the number of groups below):
-#(v1<-vifcor(env2,th=0.8)) 
-#env3 <- exclude(env2, v1)
-
-names(env3)
-write.table(env3,"env_without_collinearities.csv")
-environment = env3
+environment <- read.table("PCAScores.csv",row.names=1,header=T,sep=" ")
+dim(environment)
 View(environment)
+vif(environment) 
+names(environment)
 
 #################################################################
 #### END OF HIERARCHICAL CLUSTERING OF VARIABLES ################
@@ -121,10 +110,11 @@ env.fwd #List of selected variables
 env.sign <- sort(env.fwd$order)
 env.red <- environment[,c(env.sign)]
 head(env.red)
-#vif(env.red)
-#env.rda.selected <- rda(spp.h, env.red)
-#env.R2a <- RsquareAdj(env.rda.selected)$adj.r.squared)
-# save.image()
+vif(env.red)
+env.rda.selected <- rda(spp.h, env.red)
+env.R2a <- RsquareAdj(env.rda.selected)$adj.r.squared
+
+save.image()
 
 #############################################
 ######### SELECTING SPATIAL DATA ############
