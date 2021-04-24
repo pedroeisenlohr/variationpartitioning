@@ -1,10 +1,10 @@
 ### SELECION OF ENVIRONMENTAL AND SPATIAL DATA, AND VARIATION PARTITIONING ###
-#By: Pedro V. Eisenlohr - UNEMAT, Alta Floresta (pedro.eisenlohr@unemat.br)
-#Based on Bauman et al. (2018), Clappe et al. (2018), Blanchet et al. (2008), Chavent et al. (2012) and others
+# By: Pedro V. Eisenlohr - UNEMAT, Alta Floresta (pedro.eisenlohr@unemat.br)
+# Based on Bauman et al. (2018), Clappe et al. (2018), Blanchet et al. (2008), Chavent et al. (2012) and others
 
 # Acknowledgments:
 # Sylvie Clappe
-# Jo?o Carlos Pires de Oliveira
+# Joao Carlos Pires de Oliveira
 
 library(ade4)
 library(adespatial)
@@ -31,16 +31,15 @@ View(spp.h)
 environment <- read.table(file.choose(),row.names=1,header=T,sep=",") #environmental variables
 View(environment)
 dim(environment)
-#environment_std<-decostand(environment,"standardize") #caso queira padronizar a escala das vari?veis ambientais
+#environment_std<-decostand(environment,"standardize") #if you wish to standardize the scale of all predictors
+#Here we will not do this, because the standardization of the variables will be done via ClustOfVar
+#You should do the standardization above if you decide to work with raw environmental variables
 #View(environment_std)
 
 ##Spatial matrix
 ll<-read.table(file.choose(),row.names=1,header=T,sep=",") #longitude and latitude
 View(ll)
 dim(ll)
-
-
-
 
 #############################################
 ####### SELECTING ENVIRONMENTAL DATA ########
@@ -68,7 +67,7 @@ plot(tree)
 stab <- stability(tree,B=1000, graph = T) #To help in the selection of the number of partitions.
 (nc<-which.max(stab$meanCR)+1)
 
-### Here, you need to adjust he routine to the number of selected clusters (if you don't want to use nc).
+### Here, you need to adjust the routine to the number of selected clusters (if you don't want to use nc).
 P<-cutreevar(tree,nc,matsim=TRUE)
 cluster <- P$cluster
 X <- environment
@@ -80,9 +79,8 @@ for (i in 1:nc) {
 P$cluster
 clusterID <- P$var
 clusterID
-write.table(P$scores,"PCAScores.csv")
+environment <- as.data.frame(P$scores)
 
-environment <- read.table("PCAScores.csv",row.names=1,header=T,sep=" ")
 dim(environment)
 View(environment)
 vif(environment) 
@@ -99,7 +97,7 @@ names(environment)
 #################################################################
 
 # Forward selection of the environmental variables
-env.rda <- rda(spp.h,environment) #If you prefer to work with the whole response matrix, please change 'scores.pcoa' by 'spp.h'
+env.rda <- rda(spp.h,environment)
 env.rda
 anova(env.rda, permutations = how(nperm=999))
 ### According to Blanchet et al. (2008): "If, and only if, the global 
@@ -189,6 +187,9 @@ vprda
 source("msrvaripart.R") #available upon request
 vprdaMSR <- msr.varipart2(vprda, mem.all, nrepet = 999) #new variation partitioning (Clappe et al. 2018)
 vprdaMSR #observe the result for fraction [a]. To obtain the significance of fraction [c], consider the result obtained by vprda.
+#Fraction [c] is not testable for msr.varipart. 
+#It has no sense to test [c] obs against a null distribution of [c] msr, which present similar spatial structures.
+#As such, the test of significance for [c] is the same as the one in varipart. 
 
 
 
@@ -198,7 +199,7 @@ vprdaMSR #observe the result for fraction [a]. To obtain the significance of fra
 
 #Testing fraction [b] (Bauman et al. 2019)
 modsel.env <- listw.select(env.red, candidates, MEM.autocor = "positive", method = "global")
-(global.env <- anova(rda(spp.h, env.red))$Pr[1])#apenas checar se foi significativo. N?o precisa anotar. Se n?o for significativo, n?o prossiga.
+(global.env <- anova(rda(spp.h, env.red))$Pr[1])#just check if it was significant. If it is not significant, do not proceed.
 VP <- varpart(spp.h, env.red, spatial.red)
 # SSEF:
 (SSEF <- VP$part$indfract$Adj.R.square[2])
@@ -216,7 +217,7 @@ env.rda<-rda(spp.h,env.red,spatial.red)
 head(summary(env.rda)) ### Please observe the explanation of each axis.
 #plot(env.rda)
 spenvcor(env.rda) # species-environment correlation
-intersetcor(env.rda) #"interset" correlation
+intersetcor(env.rda) # "interset" correlation
 
 
 ###########################################################################
@@ -227,7 +228,7 @@ spatial.rda<-rda(spp.h,spatial.red,env.red)
 head(summary(spatial.rda)) ### Please observe the explanation of each axis.
 #plot(spatial.rda)
 spenvcor(spatial.rda) # species-space correlation
-intersetcor(spatial.rda) #"interset" correlation
+intersetcor(spatial.rda) # "interset" correlation
 
 
 ###########################################################################
@@ -245,7 +246,6 @@ rda.formula <- rda(spp.h~., data=all.predictors)
 anova(rda.formula, by="axis")
 
 
-
 # RDA's graphs
 #all<-rda(spp.h,all.predictors)
 FACTOR.df<-read.table(file.choose(),row.names=1,header=T,sep=",")
@@ -257,18 +257,18 @@ rda.graph<-all.f[,1]
 View(rda.graph) #Factor
 cca.results <- all
 cca.summary <- summary(cca.results)
-(imp.axis.1 <- cca.summary$cont$importance[2,1]) # explica??o do eixo 1
-(imp.axis.2 <- cca.summary$cont$importance[2,2]) # explica??o do eixo 2
-(rowScores <- as.data.frame(cca.results$CCA$u))  # scores das parcelas
-write.table(rowScores,"scores_parcelas.csv")
-(colScores <- as.data.frame(cca.results$CCA$v))  # scores das esp?cies 
-write.table(colScores,"scores_spp.csv")
-(bi.var <- as.data.frame(cca.results$CCA$biplot)) # scores das vari?veis ambientais
-write.table(bi.var,"scores_amb.csv")
+(imp.axis.1 <- cca.summary$cont$importance[2,1]) # R² of Axis 1
+(imp.axis.2 <- cca.summary$cont$importance[2,2]) # R² of Axis 2
+(rowScores <- as.data.frame(cca.results$CCA$u))  # sites scores
+#write.table(rowScores,"scores_parcelas.csv")
+(colScores <- as.data.frame(cca.results$CCA$v))  # species scores 
+#write.table(colScores,"scores_spp.csv")
+(bi.var <- as.data.frame(cca.results$CCA$biplot)) # environmental scores
+#write.table(bi.var,"scores_amb.csv")
 rowScores$FACTOR<-rda.graph
 str(rowScores)
 
-# tiff(filename="figura.tiff", res=600, height=600/72*600, width=600/72*600, compression= "lzw")
+# tiff(filename="figure.tiff", res=600, height=600/72*600, width=600/72*600, compression= "lzw")
 
 
 
@@ -289,6 +289,8 @@ ggrda1 <- ggplot() +
         panel.border = element_rect(fill = NA, colour = "black"),
         axis.text.x = element_text(color ="black", size = 12, angle = 0),
         axis.text.y = element_text(color ="black", size = 12, angle = 0))
+
+# Visualize
 ggrda1
 
 #ggrda1 <- ggplot() +
@@ -318,7 +320,7 @@ ggrda2 <- ggrda1 +
     ylab(paste("RDA 2 ", "(", round(imp.axis.2*100, digits = 1), "%)")) +
     theme(axis.title.y=element_text(angle = 90, size = 15)) #, face = "bold"
 
-# Visualizar
+# Visualize
 ggrda2
 
 
@@ -338,14 +340,14 @@ ggrda3 <- ggrda2 +
               fontface = "bold")
 #geom_text_repel(aes(x = colScores$PC1, y = colScores$PC2, label = rownames(colScores)))
 
-# Visualizar
+# Visualize
 ggrda3
 
 
 
 ggrda4 <- ggrda3 + ggsave("RDA_MOD.tiff",width = 15, height = 15, units = "cm")
 
-# Visualizar
+# Visualize
 ggrda4
 
 
